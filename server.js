@@ -18,7 +18,10 @@ const Enrollment = require("./models/Enrollment")
 
 const app = express()
 
-app.use(helmet())
+app.use(helmet({
+  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}))
 app.use(morgan("combined"))
 app.use(cors())
 app.use(express.json())
@@ -340,6 +343,21 @@ app.get("/api/courses", async (req, res) => {
     res.json(courses)
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch courses", error: error.message })
+  }
+})
+
+app.get("/api/courses/:id", async (req, res) => {
+  try {
+    const { id } = req.params
+    const course = await Course.findOne({ _id: id, isPublished: true })
+    
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" })
+    }
+    
+    res.json(course)
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch course", error: error.message })
   }
 })
 
