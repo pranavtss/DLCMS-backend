@@ -41,10 +41,10 @@ const upload = multer({
       cb(null, uploadsDir)
     },
     filename: (req, file, cb) => {
-      const timestamp = Date.now()
       const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, "_")
-      const filename = `${timestamp}-${safeName}`
-      console.log("✓ Saving file:", filename)
+      // Use a stable name so re-uploading the same file does not create duplicates
+      const filename = safeName
+      console.log("✓ Saving file (overwriting if exists):", filename)
       cb(null, filename)
     },
   }),
