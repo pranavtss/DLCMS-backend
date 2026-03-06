@@ -509,7 +509,7 @@ app.delete("/api/courses/:id", authenticateToken, authorizeAdmin, async (req, re
 app.post("/api/courses/:courseId/lessons", authenticateToken, authorizeAdmin, async (req, res) => {
   try {
     const { courseId } = req.params
-    const { title, videoUrl, videoUrls, description, order } = req.body
+    const { title, videoUrl, videoUrls, description, order, materials } = req.body
 
     const course = await Course.findById(courseId)
     if (!course) {
@@ -526,13 +526,15 @@ app.post("/api/courses/:courseId/lessons", authenticateToken, authorizeAdmin, as
         ? [videoUrl]
         : []
 
+    const normalizedMaterials = Array.isArray(materials) ? materials : []
+
     const newLesson = {
       title,
       videoUrl: normalizedVideoUrls[0] || videoUrl,
       videoUrls: normalizedVideoUrls,
       description,
       order: order || course.lessons.length,
-      materials: []
+      materials: normalizedMaterials
     }
 
     course.lessons.push(newLesson)
@@ -812,16 +814,21 @@ app.get("/api/admin/reviews", authenticateToken, authorizeAdmin, async (req, res
   }
 })
 
-app.delete("/api/reviews/:reviewId", authenticateToken, authorizeAdmin, async (req, res) => {
+app.delete("/api/reviews/:reviewId", authenticateToken, async (req, res) => {
   try {
     const { reviewId } = req.params
+
     const review = await Review.findByIdAndDelete(reviewId)
-    
+
     if (!review) {
       return res.status(404).json({ message: "Review not found" })
     }
 
-    console.log(`✅ Review deleted`)
+    console.log("✅ Review deleted", {
+      reviewId,
+      deletedBy: req.user?.email,
+      role: req.user?.role,
+    })
     res.json({ message: "Review deleted successfully" })
   } catch (error) {
     res.status(500).json({ message: "Failed to delete review", error: error.message })
